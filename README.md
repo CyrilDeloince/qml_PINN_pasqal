@@ -81,4 +81,39 @@ The readout therefore remains faithful to the original paper: it is fixed, Hermi
 Here, $a$ and $b$ are trainable classical parameters initialized from the mean and standard deviation of the target data. This matches the paper's output scaling while using the photonic observable defined above.
 
 
+### Second modification: output scaling
 
+The original paper first defines the raw QNN output as the expectation value of the measured observable:
+
+$$
+\tilde{y}_i =
+\langle \Phi(\vec{x}_i) | \hat{C} | \Phi(\vec{x}_i) \rangle .
+$$
+
+For the weather task, this output is used to predict the stream function \(\psi\).  
+However, the paper also states that the measured QNN output is passed through a learnable affine transformation:
+
+$$
+\psi =
+\alpha_{n-1}\mathrm{QNN}(\lambda,\phi,t) + \alpha_n .
+$$
+
+In the photonic version, after replacing the qubit observable \(\sum_m Z_m\) by its dual-rail photonic equivalent,
+
+$$
+\sum_m \left(n_{\mathrm{left},m} - n_{\mathrm{right},m}\right),
+$$
+
+we keep the same output-scaling structure:
+
+$$
+\hat{\psi} =
+\alpha_{\mathrm{scale}}
+\langle C_{\mathrm{photonic}} \rangle
++
+\alpha_{\mathrm{shift}} .
+$$
+
+The two parameters alpha_scale and alpha_shift are trainable classical parameters, initialized from the standard deviation and mean of the target stream-function data.
+
+This is therefore not an additional photonic assumption: it is the same learnable output transformation used in the original paper, applied after the photonic equivalent of the original sum_m Z_m observable.
