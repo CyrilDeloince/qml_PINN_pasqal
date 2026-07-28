@@ -117,3 +117,29 @@ $$
 The two parameters alpha_scale and alpha_shift are trainable classical parameters, initialized from the standard deviation and mean of the target stream-function data.
 
 This is therefore not an additional photonic assumption: it is the same learnable output transformation used in the original paper, applied after the photonic equivalent of the original sum_m Z_m observable.
+
+
+
+### Third modification: Trainable Photonic Entanglement
+
+In the standard qubit architecture, inter-qubit entanglement is achieved via fixed **CNOT** gates at zero cost in trainable parameters. A CNOT operation acts on two logical qubits in dual-rail encoding (4 optical modes) as a conditional swap:
+
+$$\text{CNOT} |\psi_{\text{control}}, \psi_{\text{target}}\rangle \quad \text{flips target iff } \text{control} = |1\rangle$$
+
+This operation is **non-linear in photon number**: it requires direct photon-photon interactions, which are physically impossible in passive linear optics without non-linear media or ancillary photons with measurement feed-forward (*KLM theorem, 2001*).
+
+In our dual-rail photonic circuit implementation, inter-qubit coupling is performed using a beam splitter (BS) between one mode of qubit $q$ and one mode of qubit $q+1$:
+
+$$\text{BS}(\theta): \text{mixes mode } (2q+1) \text{ with mode } 2(q+1)$$
+
+#### The limitation of fixed beam splitters ($\theta = \pi/4$)
+When $\theta$ is fixed at $\pi/4$, it provides only partial, passive mixing: a single photon reaching the beam splitter has a 50% probability of remaining in its original mode and a 50% probability of transitioning to the adjacent qubit's mode. This setup is fundamentally weaker than a CNOT gate due to two major drawbacks:
+1. **Subspace Leakage:** It can cause a photon to "leak" outside the valid single-photon-per-qubit dual-rail subspace (e.g., qubit $q$ loses its photon while qubit $q+1$ absorbs two photons).
+2. **Unconditional Interaction:** The state transformation occurs unconditionally, regardless of the control qubit's state.
+
+#### The Solution: trainable photonic entanglement
+To compensate for these physical constraints, we convert these passive beam splitters into **trainable entangling blocks**: 
+
+$$\text{BS}(\theta_{\text{trainable}}, \phi_{\text{trainable}})$$
+
+This parameterization enables the optimization algorithm to learn optimal coupling strengths, maximizing effective entanglement within the valid dual-rail subspace while actively suppressing population leakage into unphysical optical states. Therefore, a few additional parameters are required to reach equivalent expressivity.
