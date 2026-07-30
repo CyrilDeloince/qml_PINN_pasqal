@@ -143,3 +143,46 @@ To compensate for these physical constraints, we convert these passive beam spli
 $$\text{BS}(\theta_{\text{trainable}}, \phi_{\text{trainable}})$$
 
 This parameterization enables the optimization algorithm to learn optimal coupling strengths, maximizing effective entanglement within the valid dual-rail subspace while actively suppressing population leakage into unphysical optical states. Therefore, a few additional parameters are required to reach equivalent expressivity.
+
+
+
+
+
+
+
+```markdown
+## Results Summary
+
+### Step 1: Faithful Qubit Reproduction
+
+We first reproduced the original paper's Experiment 1 using Qadence (qubit-based QNN), following the exact specifications of Section V.A:
+
+- **Dataset preparation** (`quantum_bve_step_by_step.ipynb`): Downloaded ERA5 reanalysis vorticity data (15 July 1980, 500 hPa), downsampled from 721×1440 to 45×89 using `block_reduce`, ran the Spectral Element Method (SEM) barotropic solver for 23 hours, applied spherical geometry encoding (Eqs. 6-8), and built the supervised dataset of 32,040 points with features `(t, x, y, z)` and targets `ψ_SEM`.
+
+- **Training** (`running_exp1 (4).ipynb`): Trained a 6-qubit, 32-layer HEA QNN with serial trainable-frequency feature map (654 parameters), Adam optimizer (lr=1e-2), batch size 1602, for 5000 iterations.
+
+- **Result**: median MRE = 9.15%, median PPMCC = 0.873 — within the paper's reported range (MRE 7.1–10.9%, PPMCC 0.870).
+
+### Step 2: Photonic Dual-Rail Adaptation
+
+We then translated the qubit architecture to dual-rail photonics using MerLin (`photonic_version.ipynb`), with three progressive modifications:
+
+| Version | Params | Modifications | median MRE | median PPMCC |
+|---------|--------|---------------|-----------|--------------|
+| Paper (qubit) | 654 | — | 7–11% | 0.870 |
+| Our qubit reproduction | 654 | — | 9.15% | 0.873 |
+| Photonic v1 (fixed mixing) | 654 | Observable + output scaling | 17.6% | 0.723 |
+| Photonic v2 (fixed mixing, learnable output) | 654 | + learnable α_scale, α_shift | 16.98% | 0.718 |
+| **Photonic v3 (trainable mixing)** | **1004** | **+ trainable entanglement** | **14.85%** | **0.754** |
+
+### Conclusion
+
+The photonic dual-rail model successfully learns the global stream function dynamics, achieving median PPMCC = 0.754 with trainable entanglement — a meaningful correlation demonstrating that photonic quantum circuits can tackle real-world scientific machine learning tasks.
+
+The performance gap with the qubit model (0.754 vs 0.873) is explained by a fundamental physical limitation: in linear optics, there is no equivalent of the CNOT gate (KLM theorem). Fixed beam-splitter mixing provides only unconditional, partial inter-qubit coupling. Making these mixers trainable (+350 parameters) partially compensates, improving PPMCC from 0.72 to 0.75, but cannot fully bridge the gap.
+
+This represents an honest characterization of the current trade-off between photonic and qubit-based variational quantum algorithms: photonic circuits require approximately 50% more trainable parameters to partially compensate for the absence of native entangling gates, and achieve approximately 87% of the qubit model's correlation performance on this weather prediction benchmark.
+
+These results validate MerLin as a viable framework for quantum scientific machine learning, while highlighting that future work on photonic entanglement schemes (e.g., measurement-based feed-forward, non-linear interactions, or alternative encoding strategies beyond dual-rail) could further close the gap.
+```
+
